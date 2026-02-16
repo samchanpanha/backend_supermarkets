@@ -2,14 +2,13 @@ package com.supermarket.product.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Entity
-@Table(name = "products")
-public class Product {
+@Table(name = "categories")
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,53 +24,32 @@ public class Product {
     private String description;
 
     @Column(unique = true, nullable = false)
-    private String sku;
-
-    @Column(nullable = false)
-    private BigDecimal basePrice;
+    private String code;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @JoinColumn(name = "parent_id")
+    private Category parent;
 
-    @Column(length = 1000)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    private List<Category> children;
+
+    @Column(nullable = false)
+    private Integer level = 0;
+
+    @Column(nullable = false)
     private String imageUrl;
 
     @Column(nullable = false)
     private boolean active = true;
 
-    private String brand;
-
-    private String unit;
-
-    private BigDecimal weight;
-
-    @Column(nullable = false)
-    private Integer quantity = 0;
-
-    @Column(nullable = false)
-    private Integer reservedQuantity = 0;
-
-    private Integer minStockLevel;
-
-    private Integer maxStockLevel;
-
-    private Integer reorderLevel;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ProductUnit> units;
-
-    private String barcode;
+    @Column(name = "sort_order")
+    private Integer sortOrder = 0;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    public Integer getAvailableQuantity() {
-        return quantity - reservedQuantity;
-    }
 
     @PrePersist
     protected void onCreate() {
