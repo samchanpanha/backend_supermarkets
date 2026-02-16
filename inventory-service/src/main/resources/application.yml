@@ -5,7 +5,7 @@ spring:
   application:
     name: inventory-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/supermarket_inventory
+    url: jdbc:postgresql://localhost:5432/inventory_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -16,14 +16,30 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/supermarket
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+keycloak:
+  enabled: true
+  issuer-uri: http://localhost:8180/realms/supermarket
+  realm: supermarket
+  client-id: supermarket-inventory
 
 logging:
   level:
     com.supermarket: DEBUG
+    org.springframework.security: DEBUG

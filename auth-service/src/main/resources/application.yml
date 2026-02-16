@@ -5,7 +5,7 @@ spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/supermarket_auth
+    url: jdbc:postgresql://localhost:5432/auth_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -16,18 +16,36 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/supermarket
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+keycloak:
+  enabled: true
+  issuer-uri: http://localhost:8180/realms/supermarket
+  realm: supermarket
+  client-id: supermarket-auth
+  client-secret: 
+  auth-server-url: http://localhost:8180
 
 jwt:
-  secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2hpams=
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
   expiration: 86400000
 
 logging:
   level:
     com.supermarket: DEBUG
+    org.springframework.security: DEBUG

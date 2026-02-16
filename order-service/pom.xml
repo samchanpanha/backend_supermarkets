@@ -13,7 +13,7 @@
     <artifactId>order-service</artifactId>
     <version>1.0.0</version>
     <name>order-service</name>
-    <description>Order Management Service</description>
+    <description>Order Management Service with Keycloak</description>
     
     <dependencies>
         <dependency>
@@ -38,6 +38,17 @@
         </dependency>
         
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        
+        <!-- Keycloak OAuth2 Resource Server -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
@@ -45,11 +56,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
         </dependency>
         
         <dependency>

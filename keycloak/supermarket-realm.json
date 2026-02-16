@@ -1,0 +1,253 @@
+{
+  "id": "supermarket",
+  "realm": "supermarket",
+  "enabled": true,
+  "displayName": "Supermarket POS",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>Supermarket POS</span></div>",
+  "accessTokenLifespan": 300,
+  "accessCodeLifespan": 60,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "clients": [
+    {
+      "clientId": "supermarket-gateway",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlow": true,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300",
+        "client.secret.creation.time": "1699500000"
+      },
+      "secret": "supermarket-gateway-secret"
+    },
+    {
+      "clientId": "supermarket-auth",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlow": true,
+      "implicitFlow": false,
+      "directAccessGrants": true,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-auth-secret"
+    },
+    {
+      "clientId": "supermarket-product",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-product-secret"
+    },
+    {
+      "clientId": "supermarket-inventory",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-inventory-secret"
+    },
+    {
+      "clientId": "supermarket-order",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-order-secret"
+    },
+    {
+      "clientId": "supermarket-payment",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-payment-secret"
+    },
+    {
+      "clientId": "supermarket-pos",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-pos-secret"
+    },
+    {
+      "clientId": "supermarket-tenant",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-tenant-secret"
+    },
+    {
+      "clientId": "supermarket-accounting",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-accounting-secret"
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator role"
+      },
+      {
+        "name": "manager",
+        "description": "Manager role"
+      },
+      {
+        "name": "cashier",
+        "description": "Cashier role"
+      },
+      {
+        "name": "user",
+        "description": "Regular user role"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@supermarket.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
+    },
+    {
+      "username": "manager",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "manager@supermarket.com",
+      "firstName": "Store",
+      "lastName": "Manager",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "manager"
+      ]
+    },
+    {
+      "username": "cashier",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "cashier@supermarket.com",
+      "firstName": "Cashier",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cashier123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "cashier"
+      ]
+    }
+  ],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicy": "frame-ancestors 'none';",
+    "xContentTypeOptions": "nosniff",
+    "xFrameOptions": "DENY",
+    "xRobotsTag": "none",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  }
+}

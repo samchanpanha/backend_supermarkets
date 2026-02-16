@@ -1,14 +1,17 @@
 version: '3.8'
 
 services:
-  # Service Discovery
-  eureka-server:
-    image: springcloud/eureka-server:latest
-    container_name: eureka-server
+  # Keycloak Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: supermarket-keycloak
+    command: start-dev
     ports:
-      - "8761:8761"
+      - "8180:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=default
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-file
     networks:
       - supermarket-network
 
