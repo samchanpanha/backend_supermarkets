@@ -165,21 +165,41 @@
         "access.token.lifespan": "300"
       },
       "secret": "supermarket-accounting-secret"
+    },
+    {
+      "clientId": "supermarket-audit",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlow": false,
+      "implicitFlow": false,
+      "directAccessGrants": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "secret": "supermarket-audit-secret"
     }
   ],
   "roles": {
     "realm": [
       {
         "name": "admin",
-        "description": "Administrator role"
+        "description": "Administrator role with full access"
       },
       {
         "name": "manager",
-        "description": "Manager role"
+        "description": "Manager role with management access"
       },
       {
         "name": "cashier",
-        "description": "Cashier role"
+        "description": "Cashier role for POS operations"
+      },
+      {
+        "name": "auditor",
+        "description": "Auditor role for audit log access"
       },
       {
         "name": "user",
@@ -240,6 +260,24 @@
       ],
       "realmRoles": [
         "cashier"
+      ]
+    },
+    {
+      "username": "auditor",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "auditor@supermarket.com",
+      "firstName": "Audit",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "auditor123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "auditor"
       ]
     }
   ],

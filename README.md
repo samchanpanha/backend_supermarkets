@@ -28,6 +28,7 @@ A comprehensive multi-tenant Supermarket Point of Sale (POS) system built with S
 | [pos-service](./pos-service) | 8086 | POS Terminal Management |
 | [tenant-service](./tenant-service) | 8087 | Multi-tenant Management |
 | [accounting-service](./accounting-service) | 8088 | Accounting & GL |
+| [audit-service](./audit-service) | 8089 | Audit Logging & Monitoring |
 
 ### Infrastructure Services
 
@@ -37,6 +38,13 @@ A comprehensive multi-tenant Supermarket Point of Sale (POS) system built with S
 | Kafka | 9092 | Message Broker |
 | Zookeeper | 2181 | Kafka Coordinator |
 | Keycloak | 8180 | OAuth2 Identity Provider |
+| Redis | 6379 | Caching |
+| Elasticsearch | 9200 | Log Storage |
+| Kibana | 5601 | Log Visualization |
+| Prometheus | 9090 | Metrics |
+| Grafana | 3000 | Dashboards |
+
+---
 
 ## 🔐 Keycloak OAuth2 Integration
 
@@ -73,91 +81,137 @@ All microservices are secured with Keycloak OAuth2/OIDC authentication. Each ser
 | supermarket-pos | Bearer-only | POS Service |
 | supermarket-tenant | Bearer-only | Tenant Service |
 | supermarket-accounting | Bearer-only | Accounting Service |
+| supermarket-audit | Bearer-only | Audit Service |
 
 ### Pre-configured Users
 
-| Username | Password | Role |
-|----------|----------|------|
-| admin | admin123 | admin |
-| manager | manager123 | manager |
-| cashier | cashier123 | cashier |
+| Username | Password | Role | Description |
+|----------|----------|------|-------------|
+| admin | admin123 | ADMIN | Full system access |
+| manager | manager123 | MANAGER | Store management |
+| cashier | cashier123 | CASHIER | POS operations |
+| auditor | auditor123 | AUDITOR | Audit log access |
 
-### Service Configuration
+---
 
-Each service has the following Keycloak configuration in `application.yml`:
+## 🎯 Roles & Permissions
 
-```yaml
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8180/realms/supermarket
+### Role Hierarchy
 
-keycloak:
-  enabled: true
-  issuer-uri: http://localhost:8180/realms/supermarket
-  realm: supermarket
-  client-id: <service-name>
+```
+ADMIN
+├── Full system access
+├── User management
+├── View all audit logs
+└── System configuration
+
+MANAGER
+├── Product management
+├── Inventory management
+├── Order management
+├── View reports
+└── View audit logs
+
+CASHIER
+├── Process sales
+├── Process payments
+├── View products
+└── Process returns
+
+AUDITOR
+├── View all audit logs
+├── View user activities
+├── View action summaries
+└── View failed activities
 ```
 
-### Security Configuration
+### Permission Model
 
-Each service implements JWT token validation with role-based access control:
+The system supports granular permissions with:
+- **Resource**: The entity being accessed (e.g., PRODUCT, ORDER, USER)
+- **Action**: The operation being performed (e.g., CREATE, UPDATE, DELETE, VIEW)
+- **Roles**: Groups of permissions assigned to users
+
+---
+
+## 📊 Audit Service
+
+### Overview
+The audit-service provides comprehensive logging of all user activities across the platform. It supports both synchronous and asynchronous logging via Apache Kafka.
+
+### Features
+- **Real-time Logging**: Track all user actions as they happen
+- **Async Processing**: Non-blocking audit logging via Kafka
+- **Search & Analytics**: Advanced search with pagination and filtering
+- **Activity Summary**: View action counts and most active users
+- **Failed Activity Tracking**: Monitor failed login attempts and errors
+
+### Audit Actions Tracked
+
+| Action | Description |
+|--------|-------------|
+| LOGIN | User login success |
+| LOGIN_FAILED | Failed login attempt |
+| LOGOUT | User logout |
+| CREATE | New entity created |
+| UPDATE | Entity updated |
+| DELETE | Entity deleted |
+| VIEW | Entity viewed |
+| PAYMENT | Payment processed |
+| REFUND | Payment refunded |
+| EXPORT | Data exported |
+| IMPORT | Data imported |
+| APPROVE | Entity approved |
+| REJECT | Entity rejected |
+| PERMISSION_DENIED | Access denied |
+| ACCESS_DENIED | Unauthorized access |
+
+### Audit API Endpoints
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | /api/audit | Search audit logs | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/{id} | Get audit log by ID | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/tenant/{tenantId} | Get logs by tenant | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/user/{userId} | Get logs by user | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/action/{action} | Get logs by action | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/entity/{entityId} | Get logs by entity | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/summary | Get action summary | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/active-users | Most active users | ADMIN, MANAGER, AUDITOR |
+| GET | /api/audit/failed | Failed activities | ADMIN, AUDITOR |
+| POST | /api/audit | Create audit log | ADMIN, AUDITOR |
+
+### Using Audit Log Utility
+
+Inject the `AuditLogUtil` in any service to log activities:
 
 ```java
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
-public class KeycloakSecurityConfig {
+@Autowired
+private AuditLogUtil auditLogUtil;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**", "/health").permitAll()
-                .requestMatchers("/api/v1/<service>/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
-        
-        return http.build();
-    }
-}
+// Log a login
+auditLogUtil.logAndSend(
+    userId,           // User ID
+    userName,         // User Name
+    tenantId,         // Tenant ID
+    "LOGIN",          // Action
+    null,             // Entity Type
+    null,             // Entity ID
+    "User logged in", // Description
+    ipAddress,        // IP Address
+    200               // Response Status
+);
+
+// Or build custom log
+CreateAuditLogRequest log = auditLogUtil.buildPaymentLog(
+    userId, userName, tenantId, 
+    orderId, amount, "CASH", "COMPLETED", 
+    ipAddress, 200
+);
+auditLogUtil.sendAsyncAuditLog(log);
 ```
 
-### API Authentication Flow
-
-```
-┌─────────┐     JWT Token     ┌────────────┐     Validate     ┌─────────┐
-│  Client │ ───────────────► │ API Gateway│ ───────────────► │Keycloak│
-└─────────┘                   └────────────┘                  └────────┘
-                                  │
-                                  ▼
-                           ┌────────────┐
-                           │ Microservice│
-                           └────────────┘
-```
-
-### Making Authenticated Requests
-
-```bash
-# Get access token
-curl -X POST http://localhost:8180/realms/supermarket/protocol/openid-connect/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=supermarket-gateway" \
-  -d "username=admin" \
-  -d "password=admin123"
-
-# Use token in API request
-curl -X GET http://localhost:8080/api/v1/products \
-  -H "Authorization: Bearer <access_token>" \
-  -H "X-Tenant-ID: tenant-1"
-```
+---
 
 ## 🚀 Quick Start
 
@@ -173,29 +227,19 @@ curl -X GET http://localhost:8080/api/v1/products \
    docker-compose up -d postgres kafka zookeeper keycloak
    ```
 
-2. **Start Service Discovery**:
-   ```bash
-   cd service-discovery
-   mvn spring-boot:run
-   ```
+2. **Import Keycloak Realm**:
+   - Access http://localhost:8180
+   - Import `keycloak/supermarket-realm.json`
 
-3. **Start Config Service**:
+3. **Start Microservices**:
    ```bash
-   cd config-service
-   mvn spring-boot:run
-   ```
-
-4. **Start Microservices** (in any order):
-   ```bash
+   # Start in order
+   cd service-discovery && mvn spring-boot:run
+   cd config-service && mvn spring-boot:run
    cd auth-service && mvn spring-boot:run
-   cd product-service && mvn spring-boot:run
-   # ... and so on
-   ```
-
-5. **Start API Gateway**:
-   ```bash
-   cd api-gateway
-   mvn spring-boot:run
+   cd audit-service && mvn spring-boot:run
+   # ... other services
+   cd api-gateway && mvn spring-boot:run
    ```
 
 ### Or Use Docker Compose
@@ -207,6 +251,8 @@ mvn clean package -DskipTests
 # Start all services
 docker-compose up -d
 ```
+
+---
 
 ## 📡 API Endpoints
 
@@ -222,6 +268,7 @@ docker-compose up -d
 | GET | /api/v1/pos/terminals | pos-service | List terminals |
 | GET | /api/v1/tenants | tenant-service | List tenants |
 | GET | /api/v1/accounting/gl-accounts | accounting-service | List GL accounts |
+| GET | /api/v1/audit | audit-service | Search audit logs |
 
 ### Multi-tenancy
 
@@ -231,6 +278,25 @@ curl -X GET http://localhost:8080/api/v1/products \
   -H "X-Tenant-ID: tenant-1" \
   -H "Authorization: Bearer <token>"
 ```
+
+### Authentication Flow
+
+```bash
+# 1. Get access token
+curl -X POST http://localhost:8180/realms/supermarket/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=supermarket-gateway" \
+  -d "username=admin" \
+  -d "password=admin123"
+
+# 2. Use token in API request
+curl -X GET http://localhost:8080/api/v1/products \
+  -H "Authorization: Bearer <access_token>" \
+  -H "X-Tenant-ID: tenant-1"
+```
+
+---
 
 ## 🧪 Testing
 
@@ -243,6 +309,8 @@ mvn test
 ```bash
 mvn verify -DskipTests=false
 ```
+
+---
 
 ## 📁 Project Structure
 
@@ -258,48 +326,67 @@ supermarket/
 ├── payment-service/         # Payment Processing
 ├── pos-service/             # POS Terminal Management
 ├── tenant-service/          # Multi-tenant Management
-├── accounting-service/      # Accounting & GL
+├── accounting-service/       # Accounting & GL
+├── audit-service/           # Audit Logging & Monitoring
 ├── common-library/           # Shared Code
 ├── docker-compose.yml        # Docker Orchestration
 ├── keycloak/                 # Keycloak Configuration
+│   └── supermarket-realm.json
 └── README.md                # This File
 ```
 
+---
+
+## 📋 Database Schema
+
+### Service Databases
+
+| Service | Database | Tables |
+|---------|----------|--------|
+| auth | auth_db | users, roles, permissions |
+| product | product_db | products, categories, units |
+| inventory | inventory_db | inventory, stock_transactions |
+| order | order_db | orders, order_items |
+| payment | payment_db | payments, transactions |
+| pos | pos_db | terminals, shifts |
+| tenant | tenant_db | tenants, configurations |
+| accounting | accounting_db | gl_accounts, journal_entries |
+| audit | audit_db | audit_logs |
+
+---
+
 ## 🔧 Configuration
-
-### Database Configuration
-
-Each service has its own PostgreSQL database:
-- `auth_db` - Authentication data
-- `product_db` - Products and categories
-- `inventory_db` - Inventory levels
-- `order_db` - Orders and transactions
-- `payment_db` - Payment records
-- `pos_db` - POS terminal data
-- `tenant_db` - Tenant configuration
-- `accounting_db` - GL accounts and journals
 
 ### Kafka Topics
 
+- `audit-logs` - Audit log events
 - `order-created` - New order events
 - `payment-completed` - Payment success events
 - `inventory-updated` - Stock changes
 - `product-created` - New product events
 
-## 📝 API Documentation
-
-- API Gateway: http://localhost:8080/actuator
-- Eureka Dashboard: http://localhost:8761
-- Keycloak Admin: http://localhost:8180
+---
 
 ## 🔒 Security Features
 
 1. **OAuth2/OIDC**: All services use Keycloak for authentication
 2. **JWT Tokens**: Stateless authentication with JWT
-3. **Role-Based Access Control**: ADMIN, MANAGER, CASHIER roles
+3. **Role-Based Access Control**: ADMIN, MANAGER, CASHIER, AUDITOR roles
 4. **Multi-tenancy**: Tenant isolation via X-Tenant-ID header
 5. **API Gateway**: Centralized security and rate limiting
+6. **Audit Logging**: Complete tracking of all user activities
+
+---
 
 ## 📄 License
 
 This project is proprietary software for Supermarket POS SaaS.
+
+---
+
+## 🆘 Support
+
+For issues and questions:
+- Check Keycloak logs: `docker-compose logs keycloak`
+- Check Kafka logs: `docker-compose logs kafka`
+- Check audit-service logs: `docker-compose logs audit-service`

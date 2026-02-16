@@ -34,9 +34,11 @@
         <module>order-service</module>
         <module>payment-service</module>
         <module>pos-service</module>
+        <module>tenant-service</module>
+        <module>accounting-service</module>
+        <module>audit-service</module>
         <module>ecommerce-service</module>
         <module>loyalty-service</module>
-        <module>tenant-service</module>
         <module>customer-service</module>
         <module>analytics-service</module>
         <module>api-gateway</module>

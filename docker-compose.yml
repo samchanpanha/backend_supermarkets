@@ -22,12 +22,26 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - supermarket-network
+    command: >
+      postgres
+      -c "CREATE DATABASE audit_db;"
+      -c "CREATE DATABASE config_db;"
+      -c "CREATE DATABASE auth_db;"
+      -c "CREATE DATABASE product_db;"
+      -c "CREATE DATABASE inventory_db;"
+      -c "CREATE DATABASE order_db;"
+      -c "CREATE DATABASE payment_db;"
+      -c "CREATE DATABASE pos_db;"
+      -c "CREATE DATABASE tenant_db;"
+      -c "CREATE DATABASE accounting_db;"
 
   # Kafka
   kafka:
