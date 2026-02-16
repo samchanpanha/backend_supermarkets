@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+        - id: product-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/products/**
+        - id: inventory-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/inventory/**
+        - id: order-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/orders/**
+        - id: payment-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/payments/**
+        - id: pos-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/pos/**
+        - id: tenant-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/tenants/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
